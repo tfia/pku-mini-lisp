@@ -2,8 +2,23 @@
 #include <string>
 
 #include "./tokenizer.h"
+#include "value.h"
+#include "parser.h"
 
+#include "rjsj_test.hpp"
+
+struct TestCtx {
+    std::string eval(std::string input) {
+        auto tokens = Tokenizer::tokenize(input);
+        Parser parser(std::move(tokens));
+        auto value = parser.parse();
+        return value->toString();
+    }
+};
+
+using ValuePtr = std::shared_ptr<Value>;
 int main() {
+    RJSJ_TEST(TestCtx, Lv2, Lv2Only);
     while (true) {
         try {
             std::cout << ">>> " ;
@@ -13,9 +28,12 @@ int main() {
                 std::exit(0);
             }
             auto tokens = Tokenizer::tokenize(line);
-            for (auto& token : tokens) {
-                std::cout << *token << std::endl;
-            }
+            Parser parser(std::move(tokens));
+            auto value = parser.parse();
+            std::cout << value->toString() << std::endl;
+            // for (auto& token : tokens) {
+            //     std::cout << *token << std::endl;
+            // }
         } catch (std::runtime_error& e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
