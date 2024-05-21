@@ -13,10 +13,11 @@ bool Value::isString() {return typeid(*this) == typeid(StringValue);}
 bool Value::isNil() {return typeid(*this) == typeid(NilValue);}
 bool Value::isSymbol() {return typeid(*this) == typeid(SymbolValue);}
 bool Value::isPair() {return typeid(*this) == typeid(PairValue);}
+bool Value::isBuiltinProc() {return typeid(*this) == typeid(BuiltinProcValue);}
 bool Value::isSelfEvaluating()
 {
     return (Value::isBoolean() || Value::isNumeric()
-        || Value::isString());
+        || Value::isString() || Value::isBuiltinProc());
 }
 
 // ---------- convert Value to std::vector ----------
@@ -29,7 +30,7 @@ std::vector<ValuePtr> Value::toVector()
         return res;
     }
     auto tp = this->toValuePtr();
-    while(tp->isPair())
+    while(1)
     {
         res.push_back(std::dynamic_pointer_cast<PairValue>(tp)->getL());
         if(!(std::dynamic_pointer_cast<PairValue>(tp)->getR())->isPair())
@@ -44,6 +45,13 @@ std::vector<ValuePtr> Value::toVector()
 std::optional<std::string> Value::asSymbol()
 {
     if(this->isSymbol()) return this->toString();
+    return std::nullopt;
+}
+
+// ---------- evaluate a Value as a numeric ----------
+std::optional<double> Value::asNumeric()
+{
+    if(this->isNumeric()) return dynamic_cast<NumericValue*>(this)->toDouble();
     return std::nullopt;
 }
 
@@ -105,10 +113,21 @@ std::string PairValue::toString()
     return res;
 }
 
+std::string BuiltinProcValue::toString()
+{
+    return "#<procedure>";
+}
+
+// ---------- get the data of Value ----------
+double NumericValue::toDouble() {return data;}
+
 // ---------- get shared_ptr of dataL & dataR ----------
 ValuePtr PairValue::getL() {return dataL;}
 
 ValuePtr PairValue::getR() {return dataR;}
+
+// ---------- get function pointer of BuiltinProcValue ----------
+BuiltinFuncType* BuiltinProcValue::getFunc() {return func;}
 
 // ---------- convert this pointer to ValuePtr ----------
 ValuePtr Value::toValuePtr() {return shared_from_this();}

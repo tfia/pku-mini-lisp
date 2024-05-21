@@ -15,13 +15,16 @@ public:
     bool isNil();
     bool isSymbol();
     bool isPair();
+    bool isBuiltinProc();
     bool isSelfEvaluating();
     std::vector<std::shared_ptr<Value>> toVector();
     std::optional<std::string> asSymbol();
+    std::optional<double> asNumeric();
     virtual std::shared_ptr<Value> toValuePtr();
 };
 
 using ValuePtr = std::shared_ptr<Value>;
+using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr>&);
 
 class BooleanValue : public Value
 {
@@ -38,6 +41,7 @@ class NumericValue : public Value
 public:
     NumericValue(double data) : data(data) {}
     virtual std::string toString() override;
+    double toDouble();
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -76,6 +80,15 @@ public:
     virtual ValuePtr toValuePtr() override;
     ValuePtr getL();
     ValuePtr getR();
+};
+
+class BuiltinProcValue : public Value
+{
+    BuiltinFuncType* func;
+public:
+    BuiltinProcValue(BuiltinFuncType* func) : func(func) {}
+    virtual std::string toString() override;
+    BuiltinFuncType* getFunc();
 };
 
 #endif
