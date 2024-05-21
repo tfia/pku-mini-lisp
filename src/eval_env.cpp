@@ -36,7 +36,7 @@ ValuePtr EvalEnv::eval(ValuePtr expr)
             auto value = SymbolTable.find(*name)->second;
             return value;
         }
-        else throw LispError("Variable " + *name + " not defined.");
+        else throw LispError("Variable `" + *name + "` not defined.");
     }
     else if(expr->isNil()) throw LispError("Evaluating nil is prohibited.");
     else if(expr->isPair())
@@ -46,8 +46,6 @@ ValuePtr EvalEnv::eval(ValuePtr expr)
         {
             if(auto name = v[1]->asSymbol())
             {
-                if(BuiltinSymbols.find(*name) != BuiltinSymbols.end())
-                    throw LispError("Cannot override builtin symbols.");
                 SymbolTable.insert_or_assign(name.value(), eval(v[2]));
                 return std::make_shared<NilValue>();
             }

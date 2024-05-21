@@ -4,8 +4,8 @@
 #include "value.h"
 #include "error.h"
 
-ValuePtr add(const std::vector<ValuePtr> & params);
-
 ValuePtr print(const std::vector<ValuePtr> & params);
 
+ValuePtr add(const std::vector<ValuePtr> & params);
 
+ValuePtr sub(const std::vector<ValuePtr> & params);
