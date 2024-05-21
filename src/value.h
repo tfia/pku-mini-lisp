@@ -28,7 +28,7 @@ class BooleanValue : public Value
     bool data;
 public:
     BooleanValue(bool data) : data(data) {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -37,7 +37,7 @@ class NumericValue : public Value
     double data;
 public:
     NumericValue(double data) : data(data) {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -46,7 +46,7 @@ class StringValue : public Value
     std::string data;
 public:
     StringValue(std::string data) : data(data) {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -54,7 +54,7 @@ class NilValue : public Value
 {
 public:
     NilValue() {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -63,7 +63,7 @@ class SymbolValue : public Value
     std::string data;
 public:
     SymbolValue(std::string data) : data(data) {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -72,7 +72,7 @@ class PairValue : public Value
     ValuePtr dataL, dataR;
 public:
     PairValue(ValuePtr dataL, ValuePtr dataR) : dataL(dataL), dataR(dataR) {}
-    virtual std::string toString();
+    virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
     ValuePtr getL();
     ValuePtr getR();

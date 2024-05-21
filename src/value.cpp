@@ -106,17 +106,11 @@ std::string PairValue::toString()
 }
 
 // ---------- get shared_ptr of dataL & dataR ----------
-ValuePtr PairValue::getL()
-{
-    return dataL;
-}
+ValuePtr PairValue::getL() {return dataL;}
 
-ValuePtr PairValue::getR()
-{
-    return dataR;
-}
+ValuePtr PairValue::getR() {return dataR;}
 
-// ---------- convert this to ValuePtr ----------
+// ---------- convert this pointer to ValuePtr ----------
 ValuePtr Value::toValuePtr() {return shared_from_this();}
 
 ValuePtr BooleanValue::toValuePtr() {return shared_from_this();}
