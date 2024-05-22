@@ -1,7 +1,6 @@
 #include "eval_env.h"
 #include "error.h"
-
-extern std::unordered_map<std::string, ValuePtr> BuiltinSymbols;
+#include "forms.h"
 
 EvalEnv::EvalEnv()
 {
@@ -15,6 +14,11 @@ std::vector<ValuePtr> EvalEnv::evalList(ValuePtr expr)
     auto v = expr->toVector();
     for(auto & i : v) if(!i->isNil()) result.push_back(this->eval(i));
     return result;
+}
+
+void EvalEnv::addVar(std::string & name, ValuePtr val)
+{
+    SymbolTable.insert_or_assign(name, eval(val));
 }
 
 ValuePtr EvalEnv::apply(ValuePtr proc, std::vector<ValuePtr> args)
@@ -42,21 +46,30 @@ ValuePtr EvalEnv::eval(ValuePtr expr)
     else if(expr->isPair())
     {
         std::vector<ValuePtr> v = expr->toVector();
-        if(v[0]->asSymbol() == "define"s)
+        // if(v[0]->asSymbol() == "define"s)
+        // {
+        //     if(auto name = v[1]->asSymbol())
+        //     {
+        //         SymbolTable.insert_or_assign(name.value(), eval(v[2]));
+        //         return std::make_shared<NilValue>();
+        //     }
+        //     else throw LispError("Malformed define.");
+        // }
+        auto tp = std::dynamic_pointer_cast<PairValue>(expr);
+        if(auto name = tp->getL()->asSymbol())
         {
-            if(auto name = v[1]->asSymbol())
+            if(SpecialForms.find(name.value()) != SpecialForms.end())
             {
-                SymbolTable.insert_or_assign(name.value(), eval(v[2]));
-                return std::make_shared<NilValue>();
+                return SpecialForms[name.value()](v, *this);
             }
-            else throw LispError("Malformed define.");
+            else
+            {
+                ValuePtr proc = this->eval(v[0]);
+                std::vector<ValuePtr> args = evalList(std::dynamic_pointer_cast<PairValue>(expr)->getR());
+                return this->apply(proc, args);
+            }
         }
-        else
-        {
-            ValuePtr proc = this->eval(v[0]);
-            std::vector<ValuePtr> args = evalList(std::dynamic_pointer_cast<PairValue>(expr)->getR());
-            return this->apply(proc, args);
-        }
+        
     }
     throw LispError("Unimplemented.");
 }

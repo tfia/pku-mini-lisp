@@ -17,6 +17,7 @@ public:
     bool isPair();
     bool isBuiltinProc();
     bool isSelfEvaluating();
+    bool isLambda();
     std::vector<std::shared_ptr<Value>> toVector();
     std::optional<std::string> asSymbol();
     std::optional<double> asNumeric();
@@ -32,6 +33,7 @@ class BooleanValue : public Value
 public:
     BooleanValue(bool data) : data(data) {}
     virtual std::string toString() override;
+    bool toBool();
     virtual ValuePtr toValuePtr() override;
 };
 
@@ -50,6 +52,7 @@ class StringValue : public Value
     std::string data;
 public:
     StringValue(std::string data) : data(data) {}
+    std::string getString();
     virtual std::string toString() override;
     virtual ValuePtr toValuePtr() override;
 };
@@ -89,6 +92,15 @@ public:
     BuiltinProcValue(BuiltinFuncType* func) : func(func) {}
     virtual std::string toString() override;
     BuiltinFuncType* getFunc();
+};
+
+class LambdaValue : public Value
+{
+    std::vector<std::string> params;
+    std::vector<ValuePtr> body;
+public:
+    LambdaValue(std::vector<std::string> params, std::vector<ValuePtr> body) : params(params), body(body) {}
+    std::string toString() override;
 };
 
 #endif

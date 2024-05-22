@@ -7,6 +7,7 @@
 #include "error.h"
 
 // ---------- type identifiers ----------
+
 bool Value::isBoolean() {return typeid(*this) == typeid(BooleanValue);}
 bool Value::isNumeric() {return typeid(*this) == typeid(NumericValue);}
 bool Value::isString() {return typeid(*this) == typeid(StringValue);}
@@ -14,13 +15,15 @@ bool Value::isNil() {return typeid(*this) == typeid(NilValue);}
 bool Value::isSymbol() {return typeid(*this) == typeid(SymbolValue);}
 bool Value::isPair() {return typeid(*this) == typeid(PairValue);}
 bool Value::isBuiltinProc() {return typeid(*this) == typeid(BuiltinProcValue);}
+bool Value::isLambda() {return typeid(*this) == typeid(LambdaValue);}
 bool Value::isSelfEvaluating()
 {
     return (Value::isBoolean() || Value::isNumeric()
-        || Value::isString() || Value::isBuiltinProc());
+        || Value::isString() || Value::isBuiltinProc()) || Value::isLambda();
 }
 
 // ---------- convert Value to std::vector ----------
+
 std::vector<ValuePtr> Value::toVector()
 {
     std::vector<ValuePtr> res;
@@ -42,6 +45,7 @@ std::vector<ValuePtr> Value::toVector()
 }
 
 // ---------- evaluate a Value as a symbol ----------
+
 std::optional<std::string> Value::asSymbol()
 {
     if(this->isSymbol()) return this->toString();
@@ -49,6 +53,7 @@ std::optional<std::string> Value::asSymbol()
 }
 
 // ---------- evaluate a Value as a numeric ----------
+
 std::optional<double> Value::asNumeric()
 {
     if(this->isNumeric()) return dynamic_cast<NumericValue*>(this)->toDouble();
@@ -56,6 +61,7 @@ std::optional<double> Value::asNumeric()
 }
 
 // ---------- convert Value to std::string ----------
+
 std::string BooleanValue::toString()
 {
     if(data == 0) return "#f";
@@ -118,18 +124,31 @@ std::string BuiltinProcValue::toString()
     return "#<procedure>";
 }
 
+std::string LambdaValue::toString()
+{
+    return "#<procedure>";
+}
+
 // ---------- get the data of Value ----------
+
 double NumericValue::toDouble() {return data;}
 
+bool BooleanValue::toBool() {return data;}
+
+std::string StringValue::getString() {return data;}
+
 // ---------- get shared_ptr of dataL & dataR ----------
+
 ValuePtr PairValue::getL() {return dataL;}
 
 ValuePtr PairValue::getR() {return dataR;}
 
 // ---------- get function pointer of BuiltinProcValue ----------
+
 BuiltinFuncType* BuiltinProcValue::getFunc() {return func;}
 
 // ---------- convert this pointer to ValuePtr ----------
+
 ValuePtr Value::toValuePtr() {return shared_from_this();}
 
 ValuePtr BooleanValue::toValuePtr() {return shared_from_this();}

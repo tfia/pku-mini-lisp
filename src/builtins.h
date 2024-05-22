@@ -4,8 +4,52 @@
 #include "value.h"
 #include "error.h"
 
-ValuePtr print(const std::vector<ValuePtr> & params);
+// ---------- Core Library ----------
 
-ValuePtr add(const std::vector<ValuePtr> & params);
+BuiltinFuncType printProc;
 
-ValuePtr sub(const std::vector<ValuePtr> & params);
+BuiltinFuncType displayProc;
+
+BuiltinFuncType exitProc;
+
+BuiltinFuncType newlineProc;
+
+// ---------- Arithmetic Library ----------
+
+BuiltinFuncType addProc;
+
+BuiltinFuncType subProc;
+
+BuiltinFuncType timeProc;
+
+BuiltinFuncType divProc;
+
+BuiltinFuncType absProc;
+
+BuiltinFuncType exptProc;
+
+BuiltinFuncType quotientProc;
+
+BuiltinFuncType remainderProc;
+
+BuiltinFuncType moduloProc;
+
+// ---------- Compare Library ----------
+
+BuiltinFuncType eqMarkProc;
+
+BuiltinFuncType lMarkProc;
+
+BuiltinFuncType gMarkProc;
+
+BuiltinFuncType leqMarkProc;
+
+BuiltinFuncType geqMarkProc;
+
+BuiltinFuncType evenProc;
+
+BuiltinFuncType oddProc;
+
+BuiltinFuncType zeroProc;
+
+extern const std::unordered_map<std::string, ValuePtr> BuiltinSymbols;
