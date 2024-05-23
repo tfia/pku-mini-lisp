@@ -2,16 +2,19 @@
 #include <iostream>
 #include <cmath>
 
+using ValuePtr = std::shared_ptr<Value>;
+using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
+
 // ---------- Core Library ----------
 
-ValuePtr printProc(const std::vector<ValuePtr> & params)
+ValuePtr printProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     for(const auto & i : params)
         std::cout << i->toString() << std::endl;
     return std::make_shared<NilValue>();
 }
 
-ValuePtr displayProc(const std::vector<ValuePtr> & params)
+ValuePtr displayProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     for(const auto & i : params)
     {
@@ -22,14 +25,14 @@ ValuePtr displayProc(const std::vector<ValuePtr> & params)
     return std::make_shared<NilValue>();
 }
 
-ValuePtr exitProc(const std::vector<ValuePtr> & params)
+ValuePtr exitProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     if(params.size() == 0) exit(0);
     else if(params.size() == 1 && params[0]->isNumeric()) exit(params[0]->asNumeric().value());
-    throw SyntaxError("Needed 0 or 1 params.");
+    throw SyntaxError("exitProc: Needed 0 or 1 params.");
 }
 
-ValuePtr newlineProc(const std::vector<ValuePtr> & params)
+ValuePtr newlineProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     std::cout << std::endl;
     return std::make_shared<NilValue>();
@@ -37,18 +40,18 @@ ValuePtr newlineProc(const std::vector<ValuePtr> & params)
 
 // ---------- Arithmetic Library ----------
 
-ValuePtr addProc(const std::vector<ValuePtr> & params)
+ValuePtr addProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     double result = 0;
     for(const auto & i : params)
     {
-        if(!i->isNumeric()) throw LispError("Cannot add a non-numeric value.");
+        if(!i->isNumeric()) throw LispError("addProc: Cannot add a non-numeric value.");
         result += i->asNumeric().value();
     }
     return std::make_shared<NumericValue>(result);
 }
 
-ValuePtr subProc(const std::vector<ValuePtr> & params)
+ValuePtr subProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     if(params.size() == 1) return std::make_shared<NumericValue>(-(params[0]->asNumeric().value()));
     if(params.size() == 2)
@@ -57,21 +60,21 @@ ValuePtr subProc(const std::vector<ValuePtr> & params)
         double result = x - y;
         return std::make_shared<NumericValue>(result);
     }
-    throw SyntaxError("Needed 1 or 2 params.");
+    throw SyntaxError("subProc: Needed 1 or 2 params.");
 }
 
-ValuePtr timeProc(const std::vector<ValuePtr> & params)
+ValuePtr timeProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     double result = 1;
     for(const auto & i : params)
     {
-        if(!i->isNumeric()) throw LispError("Cannot add a non-numeric value.");
+        if(!i->isNumeric()) throw LispError("timeProc: Cannot add a non-numeric value.");
         result *= i->asNumeric().value();
     }
     return std::make_shared<NumericValue>(result);
 }
 
-ValuePtr divProc(const std::vector<ValuePtr> & params)
+ValuePtr divProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     if(params.size() == 1)
     {
@@ -84,25 +87,25 @@ ValuePtr divProc(const std::vector<ValuePtr> & params)
         double result = x / y;
         return std::make_shared<NumericValue>(result);
     }
-    throw SyntaxError("Needed 1 or 2 params.");
+    throw SyntaxError("divProc: Needed 1 or 2 params.");
 }
 
-ValuePtr absProc(const std::vector<ValuePtr> & params)
+ValuePtr absProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 1) throw SyntaxError("Needed only 1 param.");
+    if(params.size() != 1) throw SyntaxError("absProc: Needed only 1 param.");
     return std::make_shared<NumericValue>(fabs(params[0]->asNumeric().value()));
 }
 
-ValuePtr exptProc(const std::vector<ValuePtr> & params)
+ValuePtr exptProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("exptProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     return std::make_shared<NumericValue>(pow(x, y));
 }
 
-ValuePtr quotientProc(const std::vector<ValuePtr> & params)
+ValuePtr quotientProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("quotientProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     double result = x / y;
     if(result < 0) result = ceil(result);
@@ -110,17 +113,17 @@ ValuePtr quotientProc(const std::vector<ValuePtr> & params)
     return std::make_shared<NumericValue>(result);
 }
 
-ValuePtr remainderProc(const std::vector<ValuePtr> & params)
+ValuePtr remainderProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("remainderProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     int result = (int)x % (int)y;
     return std::make_shared<NumericValue>(result);
 }
 
-ValuePtr moduloProc(const std::vector<ValuePtr> & params)
+ValuePtr moduloProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("moduloProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     int c = floor(x / y);
     double result = x - c * y;
@@ -129,67 +132,67 @@ ValuePtr moduloProc(const std::vector<ValuePtr> & params)
 
 // ---------- Comparison Library ----------
 
-ValuePtr eqMarkProc(const std::vector<ValuePtr> & params)
+ValuePtr eqMarkProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("eqMarkProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     bool result = (x == y);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr lMarkProc(const std::vector<ValuePtr> & params)
+ValuePtr lMarkProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("lMarkProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     bool result = (x < y);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr gMarkProc(const std::vector<ValuePtr> & params)
+ValuePtr gMarkProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("gMarkProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     bool result = (x > y);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr leqMarkProc(const std::vector<ValuePtr> & params)
+ValuePtr leqMarkProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("leqMarkProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     bool result = (x <= y);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr geqMarkProc(const std::vector<ValuePtr> & params)
+ValuePtr geqMarkProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 2) throw SyntaxError("Needed 2 params.");
+    if(params.size() != 2) throw SyntaxError("geqMarkProc: Needed 2 params.");
     double x = params[0]->asNumeric().value(), y = params[1]->asNumeric().value();
     bool result = (x >= y);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr evenProc(const std::vector<ValuePtr> & params)
+ValuePtr evenProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 1) throw SyntaxError("Needed only 1 param.");
+    if(params.size() != 1) throw SyntaxError("evenProc: Needed only 1 param.");
     double x = params[0]->asNumeric().value();
-    if((int)x != x) throw LispError("Param must be int.");
+    if((int)x != x) throw LispError("evenProc: Param must be int.");
     bool result = ((int)x % 2 == 0);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr oddProc(const std::vector<ValuePtr> & params)
+ValuePtr oddProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 1) throw SyntaxError("Needed only 1 param.");
+    if(params.size() != 1) throw SyntaxError("oddProc: Needed only 1 param.");
     double x = params[0]->asNumeric().value();
-    if((int)x != x) throw LispError("Param must be int.");
+    if((int)x != x) throw LispError("oddProc: Param must be int.");
     bool result = ((int)x % 2 != 0);
     return std::make_shared<BooleanValue>(result);
 }
 
-ValuePtr zeroProc(const std::vector<ValuePtr> & params)
+ValuePtr zeroProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
-    if(params.size() != 1) throw SyntaxError("Needed only 1 param.");
+    if(params.size() != 1) throw SyntaxError("zeroProc: Needed only 1 param.");
     double x = params[0]->asNumeric().value();
     bool result = (x == 0);
     return std::make_shared<BooleanValue>(result);

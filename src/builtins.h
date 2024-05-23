@@ -1,8 +1,11 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include "value.h"
+#include "eval_env.h"
 #include "error.h"
+
+using ValuePtr = std::shared_ptr<Value>;
+using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
 
 // ---------- Core Library ----------
 

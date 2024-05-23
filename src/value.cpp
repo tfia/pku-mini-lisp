@@ -5,6 +5,10 @@
 #include <ctype.h>
 #include "value.h"
 #include "error.h"
+#include "eval_env.h" // LambdaValue
+
+using ValuePtr = std::shared_ptr<Value>;
+using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
 
 // ---------- type identifiers ----------
 
@@ -19,7 +23,7 @@ bool Value::isLambda() {return typeid(*this) == typeid(LambdaValue);}
 bool Value::isSelfEvaluating()
 {
     return (Value::isBoolean() || Value::isNumeric()
-        || Value::isString() || Value::isBuiltinProc()) || Value::isLambda();
+        || Value::isString() || Value::isBuiltinProc() || Value::isLambda());
 }
 
 // ---------- convert Value to std::vector ----------
@@ -162,3 +166,19 @@ ValuePtr NilValue::toValuePtr() {return shared_from_this();}
 ValuePtr SymbolValue::toValuePtr() {return shared_from_this();}
 
 ValuePtr PairValue::toValuePtr() {return shared_from_this();}
+
+// ---------- apply lambda proc ----------
+
+ValuePtr LambdaValue::apply(std::vector<ValuePtr> & args)
+{
+    // for(auto & it : params) std::cout << it << std::endl;
+    // for(auto & it : args) std::cout << it->toString() << std::endl;
+    if((int)params.size() - 1 != args.size()) throw LispError("Params and args do not match.");
+    auto env = localEnv->createChild(params, args);
+    ValuePtr res;
+    for(int i = 0; i <= (int)body.size() - 2; i++)
+    {
+        res = env->eval(body[i]);
+    }
+    return res;
+}

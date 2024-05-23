@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 #include <optional>
+#include "error.h"
+// #include "eval_env.h"
 
 class Value : public std::enable_shared_from_this<Value>
 {
@@ -25,7 +27,6 @@ public:
 };
 
 using ValuePtr = std::shared_ptr<Value>;
-using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr>&);
 
 class BooleanValue : public Value
 {
@@ -85,22 +86,12 @@ public:
     ValuePtr getR();
 };
 
-class BuiltinProcValue : public Value
-{
-    BuiltinFuncType* func;
-public:
-    BuiltinProcValue(BuiltinFuncType* func) : func(func) {}
-    virtual std::string toString() override;
-    BuiltinFuncType* getFunc();
-};
+// BuiltinProcValue's declaration was moved into eval_env.h
+// in order to solve loop-include problem.
+// definition still in value.cpp
 
-class LambdaValue : public Value
-{
-    std::vector<std::string> params;
-    std::vector<ValuePtr> body;
-public:
-    LambdaValue(std::vector<std::string> params, std::vector<ValuePtr> body) : params(params), body(body) {}
-    std::string toString() override;
-};
+// LambdaValue's declaration was moved into eval_env.h
+// in order to solve loop-include problem.
+// definition still in value.cpp
 
 #endif

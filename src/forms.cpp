@@ -4,12 +4,15 @@
 
 using namespace std::literals;
 
+using ValuePtr = std::shared_ptr<Value>;
+using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
+
 ValuePtr defineForm(const std::vector<ValuePtr> & args, EvalEnv & env)
 {
     if(auto name = args[1]->asSymbol())
     {
         // std::cout << args[2]->toString() << std::endl;
-        env.addVar(name.value(), args[2]);
+        env.defineBinding(name.value(), args[2]);
         return std::make_shared<NilValue>();
     }
     else if(args[1]->isPair())
@@ -22,17 +25,17 @@ ValuePtr defineForm(const std::vector<ValuePtr> & args, EvalEnv & env)
             params,
         };
         for(int i = 2; i <= (int)args.size() - 1; i++) vin.push_back(args[i]);
-        auto val = lambdaForm(vin, env);
-        env.addVar(name.value(), val);
+        auto val = lambdaForm(vin, env); // Construct a LambdaValue
+        env.defineBinding(name.value(), val);
         return std::make_shared<NilValue>();
     }
-    throw LispError("Unimplemented");
+    throw LispError("defineForm: Unimplemented.");
 }
 
 ValuePtr quoteForm(const std::vector<ValuePtr> & args, EvalEnv & env)
 {
     return args[1];
-    throw LispError("Unimplemented");
+    throw LispError("quoteForm: Unimplemented.");
 }
 
 ValuePtr ifForm(const std::vector<ValuePtr> & args, EvalEnv & env)
@@ -81,7 +84,7 @@ ValuePtr lambdaForm(const std::vector<ValuePtr> & args, EvalEnv & env)
     std::vector<std::string> params;
     for(auto & it : tv) params.push_back(it->toString());
     for(int i = 2; i <= (int)args.size() - 1; i++) body.push_back(args[i]);
-    return std::make_shared<LambdaValue>(params, body);
+    return std::make_shared<LambdaValue>(params, body, env.shared_from_this());
 }
 
 std::unordered_map<std::string, SpecialFormType *> SpecialForms = 
