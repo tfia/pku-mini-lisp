@@ -7,6 +7,15 @@ using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
 
 // ---------- Core Library ----------
 
+ValuePtr applyProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(!params[0]->isBuiltinProc())
+        throw SyntaxError("applyProc: Param #1 should be Proc.");
+    std::vector<ValuePtr> vin = params[1]->toVector();
+    vin.erase(vin.end() - 1); // the last element is NilValue. delete it
+    return env.apply(params[0], vin);
+}
+
 ValuePtr printProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     for(const auto & i : params)
@@ -19,9 +28,21 @@ ValuePtr displayProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     for(const auto & i : params)
     {
         if(i->isString())
-            std::cout << std::dynamic_pointer_cast<StringValue>(i)->getString() << std::endl;
-        else std::cout << i->toString() << std::endl;
+            std::cout << std::dynamic_pointer_cast<StringValue>(i)->getString();
+        else std::cout << i->toString();
     }
+    return std::make_shared<NilValue>();
+}
+
+ValuePtr displaylnProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    for(const auto & i : params)
+    {
+        if(i->isString())
+            std::cout << std::dynamic_pointer_cast<StringValue>(i)->getString();
+        else std::cout << i->toString();
+    }
+    std::cout << std::endl;
     return std::make_shared<NilValue>();
 }
 
@@ -45,6 +66,7 @@ ValuePtr addProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     double result = 0;
     for(const auto & i : params)
     {
+        if(i->isNil()) continue;
         if(!i->isNumeric()) throw LispError("addProc: Cannot add a non-numeric value.");
         result += i->asNumeric().value();
     }
@@ -203,8 +225,10 @@ ValuePtr zeroProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 const std::unordered_map<std::string, ValuePtr> BuiltinSymbols = 
 {
     // ---------- Core Library ----------
+    {"apply", std::make_shared<BuiltinProcValue>(&applyProc)},
     {"print", std::make_shared<BuiltinProcValue>(&printProc)},
     {"display", std::make_shared<BuiltinProcValue>(&displayProc)},
+    {"displayln", std::make_shared<BuiltinProcValue>(&displaylnProc)},
     {"exit", std::make_shared<BuiltinProcValue>(&exitProc)},
     {"newline", std::make_shared<BuiltinProcValue>(&newlineProc)},
     // ---------- Arithmetic Library ----------

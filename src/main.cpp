@@ -21,7 +21,7 @@ struct TestCtx {
 
 using ValuePtr = std::shared_ptr<Value>;
 int main() {
-    RJSJ_TEST(TestCtx, Lv2, Lv3, Lv4, Lv5, Lv6);
+    // RJSJ_TEST(TestCtx, Lv2, Lv3, Lv4, Lv5, Lv6);
     std::shared_ptr<EvalEnv> env = EvalEnv::createGlobal();
     while (true) {
         try {

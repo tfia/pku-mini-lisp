@@ -9,9 +9,13 @@ using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
 
 // ---------- Core Library ----------
 
+BuiltinFuncType applyProc;
+
 BuiltinFuncType printProc;
 
 BuiltinFuncType displayProc;
+
+BuiltinFuncType displaylnProc;
 
 BuiltinFuncType exitProc;
 
