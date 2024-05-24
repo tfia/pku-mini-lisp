@@ -23,7 +23,9 @@ BuiltinFuncType newlineProc;
 
 BuiltinFuncType evalProc;
 
-// ---------- Type Identify Library ----------
+BuiltinFuncType errorProc;
+
+// ---------- Type Identification Library ----------
 
 BuiltinFuncType atomProc;
 
@@ -32,6 +34,8 @@ BuiltinFuncType booleanProc;
 BuiltinFuncType integerProc;
 
 BuiltinFuncType listProc;
+
+BuiltinFuncType numberProc;
 
 BuiltinFuncType nullProc;
 
@@ -42,6 +46,26 @@ BuiltinFuncType procedureProc;
 BuiltinFuncType stringProc;
 
 BuiltinFuncType symbolProc;
+
+// ---------- Pair and List Manipulation Library ----------
+
+BuiltinFuncType appendProc;
+
+BuiltinFuncType carProc;
+
+BuiltinFuncType cdrProc;
+
+BuiltinFuncType consProc;
+
+BuiltinFuncType lengthProc;
+
+BuiltinFuncType listConstructProc;
+
+BuiltinFuncType mapProc;
+
+BuiltinFuncType filterProc;
+
+BuiltinFuncType reduceProc;
 
 // ---------- Arithmetic Library ----------
 
@@ -63,7 +87,7 @@ BuiltinFuncType remainderProc;
 
 BuiltinFuncType moduloProc;
 
-// ---------- Compare Library ----------
+// ---------- Comparison Library ----------
 
 BuiltinFuncType eqMarkProc;
 
@@ -80,5 +104,11 @@ BuiltinFuncType evenProc;
 BuiltinFuncType oddProc;
 
 BuiltinFuncType zeroProc;
+
+BuiltinFuncType eqProc;
+
+BuiltinFuncType equalProc;
+
+BuiltinFuncType notProc;
 
 extern const std::unordered_map<std::string, ValuePtr> BuiltinSymbols;

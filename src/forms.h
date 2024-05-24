@@ -18,6 +18,16 @@ SpecialFormType orForm;
 
 SpecialFormType lambdaForm;
 
+SpecialFormType condForm;
+
+SpecialFormType beginForm;
+
+SpecialFormType letForm;
+
+SpecialFormType quasiquoteForm;
+
+ValuePtr vectorToList(const std::vector<ValuePtr> & v);
+
 extern std::unordered_map<std::string, SpecialFormType *> SpecialForms;
 
 #endif

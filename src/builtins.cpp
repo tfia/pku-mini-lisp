@@ -66,7 +66,15 @@ ValuePtr evalProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     return env.eval(params[0]);
 }
 
-// ---------- Type Identify Library ----------
+ValuePtr errorProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() == 0) throw LispError(0);
+    else if(params.size() == 1 && params[0]->isNumeric()) 
+        throw LispError(std::dynamic_pointer_cast<NumericValue>(params[0])->toString());
+    throw SyntaxError("exitProc: Needed 0 or 1 params.");
+}
+
+// ---------- Type Identification Library ----------
 
 ValuePtr atomProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
@@ -104,6 +112,14 @@ ValuePtr listProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     auto R = std::dynamic_pointer_cast<PairValue>(tp)->getR();
     if(R->isNil()) return std::make_shared<BooleanValue>(true);
     else if(!R->isPair()) return std::make_shared<BooleanValue>(false);
+    return std::make_shared<BooleanValue>(true);
+}
+
+ValuePtr numberProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("integerProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(!tp->isNumeric()) return std::make_shared<BooleanValue>(false);
     return std::make_shared<BooleanValue>(true);
 }
 
@@ -145,6 +161,133 @@ ValuePtr symbolProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     ValuePtr tp = params[0];
     if(tp->isSymbol()) return std::make_shared<BooleanValue>(true);
     return std::make_shared<BooleanValue>(false);
+}
+
+// ---------- Pair and List Manipulation Library ----------
+
+ValuePtr vectorToList(const std::vector<ValuePtr> & v)
+{
+    ValuePtr result = std::make_shared<PairValue>(std::make_shared<NilValue>(), std::make_shared<NilValue>());
+    ValuePtr* cur = &result;
+    bool isFirst = true;
+    for(auto & i : v)
+    {
+        if(isFirst)
+        {
+            std::dynamic_pointer_cast<PairValue>(result)->setL(i);
+            isFirst = false;
+            continue;
+        }
+        auto tmp = std::make_shared<PairValue>(i, std::make_shared<NilValue>());
+        std::dynamic_pointer_cast<PairValue>(*cur)->setR(tmp);
+        cur = (std::dynamic_pointer_cast<PairValue>(*cur)->getRp());
+    }
+    return result;
+}
+
+ValuePtr appendProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() == 0) return std::make_shared<NilValue>();
+    std::vector<ValuePtr> v;
+    for(auto & i : params)
+    {
+        auto t = i->toVector();
+        for(auto & j : t)
+        {
+            if(j->isNil()) continue;
+            v.push_back(j);
+        }
+    }
+    return vectorToList(v);
+}
+
+ValuePtr carProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("carProc: Needed only 1 param.");
+    return std::dynamic_pointer_cast<PairValue>(params[0])->getL();
+}
+
+ValuePtr cdrProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("cdrProc: Needed only 1 param.");
+    return std::dynamic_pointer_cast<PairValue>(params[0])->getR();
+}
+
+ValuePtr consProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 2) throw SyntaxError("consProc: Needed 2 params.");
+    return std::make_shared<PairValue>(params[0], params[1]);
+}
+
+ValuePtr lengthProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("lengthProc: Needed only 1 param.");
+    return std::make_shared<NumericValue>(params[0]->toVector().size() - 1);
+}
+
+ValuePtr listConstructProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() == 0) return std::make_shared<NilValue>();
+    return vectorToList(params);
+}
+
+ValuePtr mapProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    std::vector<ValuePtr> result;
+    if(params.size() != 2) throw SyntaxError("mapProc: Needed 2 params.");
+    if(!params[0]->isBuiltinProc() && !params[0]->isLambda())
+        throw SyntaxError("mapProc: Param #1 should be Proc.");
+    std::vector<ValuePtr> vin = params[1]->toVector();
+    vin.erase(vin.end() - 1); // the last element is NilValue. delete it
+    for(auto & i : vin)
+    {
+        auto t = i->toVector();
+        result.push_back(env.apply(params[0], t));
+    }
+    return vectorToList(result);
+}
+
+ValuePtr filterProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    std::vector<ValuePtr> result;
+    if(params.size() != 2) throw SyntaxError("filterProc: Needed 2 params.");
+    if(!params[0]->isBuiltinProc())
+        throw SyntaxError("filterProc: Param #1 should be Proc.");
+    std::vector<ValuePtr> vin = params[1]->toVector();
+    vin.erase(vin.end() - 1); // the last element is NilValue. delete it
+    for(auto & i : vin)
+    {
+        auto t = i->toVector();
+        auto j = env.apply(params[0], t);
+        if(!j->isBoolean()) result.push_back(i);
+        else if(std::dynamic_pointer_cast<BooleanValue>(j)->toBool()) result.push_back(i);
+    }
+    return vectorToList(result);
+}
+
+ValuePtr reduceProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 2) throw SyntaxError("reduceProc: Needed 2 params.");
+    if(!params[0]->isBuiltinProc() && !params[0]->isLambda())
+        throw SyntaxError("reduceProc: Param #1 should be Proc.");
+    if(params[1]->isNil()) throw SyntaxError("reduceProc: Param #2 should not be Nil.");
+    if(params[1]->toVector().size() - 1 == 1)
+    {
+        return std::dynamic_pointer_cast<PairValue>(params[1])->getL();
+    }
+    else
+    {
+        std::vector<ValuePtr> vin;
+        vin.push_back(params[0]);
+        vin.push_back(std::dynamic_pointer_cast<PairValue>(params[1])->getR());
+        auto t = reduceProc(vin, env);
+        return env.apply
+        (
+            params[0],
+            std::make_shared<PairValue>(std::dynamic_pointer_cast<PairValue>(params[1])->getL(), t)->toVector()
+        );
+    }
+    throw LispError("reduceProc: unknown error.");
 }
 
 // ---------- Arithmetic Library ----------
@@ -308,6 +451,34 @@ ValuePtr zeroProc(const std::vector<ValuePtr> & params, EvalEnv & env)
     return std::make_shared<BooleanValue>(result);
 }
 
+ValuePtr eqProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 2) throw SyntaxError("eqProc: Needed 2 params.");
+    if(typeid(params[0]) != (typeid(params[1])))
+        return std::make_shared<BooleanValue>(false);
+    if(params[0]->isSymbol() || params[0]->isNumeric() || params[0]->isNil() || params[0]->isBoolean())
+        return std::make_shared<BooleanValue>(params[0]->toString() == params[1]->toString());
+    bool result = (params[0] == params[1]);
+    return std::make_shared<BooleanValue>(result);
+}
+
+ValuePtr equalProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 2) throw SyntaxError("equalProc: Needed 2 params.");
+    if(typeid(params[0]) != (typeid(params[1])))
+        return std::make_shared<BooleanValue>(false);
+    return std::make_shared<BooleanValue>(params[0]->toString() == params[1]->toString());
+}
+
+ValuePtr notProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("notProc: Needed only 1 param.");
+    if(!params[0]->isBoolean()) return std::make_shared<BooleanValue>(false);
+    else if(!std::dynamic_pointer_cast<BooleanValue>(params[0])->toBool())
+        return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
+}
+
 // ---------- export builtin-symbol table to global ----------
 
 const std::unordered_map<std::string, ValuePtr> BuiltinSymbols = 
@@ -320,16 +491,28 @@ const std::unordered_map<std::string, ValuePtr> BuiltinSymbols =
     {"exit", std::make_shared<BuiltinProcValue>(&exitProc)},
     {"newline", std::make_shared<BuiltinProcValue>(&newlineProc)},
     {"eval", std::make_shared<BuiltinProcValue>(&evalProc)},
-    // ---------- Type Identify Library ----------
+    {"error", std::make_shared<BuiltinProcValue>(&errorProc)},
+    // ---------- Type Identification Library ----------
     {"atom?", std::make_shared<BuiltinProcValue>(&atomProc)},
     {"boolean?", std::make_shared<BuiltinProcValue>(&booleanProc)},
     {"integer?", std::make_shared<BuiltinProcValue>(&integerProc)},
     {"list?", std::make_shared<BuiltinProcValue>(&listProc)},
+    {"number?", std::make_shared<BuiltinProcValue>(&numberProc)},
     {"null?", std::make_shared<BuiltinProcValue>(&nullProc)},
     {"pair?", std::make_shared<BuiltinProcValue>(&pairProc)},
     {"procedure?", std::make_shared<BuiltinProcValue>(&procedureProc)},
     {"string?", std::make_shared<BuiltinProcValue>(&stringProc)},
     {"symbol?", std::make_shared<BuiltinProcValue>(&symbolProc)},
+    // ---------- Pair and List Manipulation Library ----------
+    {"append", std::make_shared<BuiltinProcValue>(&appendProc)},
+    {"car", std::make_shared<BuiltinProcValue>(&carProc)},
+    {"cdr", std::make_shared<BuiltinProcValue>(&cdrProc)},
+    {"cons", std::make_shared<BuiltinProcValue>(&consProc)},
+    {"length", std::make_shared<BuiltinProcValue>(&lengthProc)},
+    {"list", std::make_shared<BuiltinProcValue>(&listConstructProc)},
+    {"map", std::make_shared<BuiltinProcValue>(&mapProc)},
+    {"filter", std::make_shared<BuiltinProcValue>(&filterProc)},
+    {"reduce", std::make_shared<BuiltinProcValue>(&reduceProc)},
     // ---------- Arithmetic Library ----------
     {"+", std::make_shared<BuiltinProcValue>(&addProc)},
     {"-", std::make_shared<BuiltinProcValue>(&subProc)},
@@ -349,4 +532,7 @@ const std::unordered_map<std::string, ValuePtr> BuiltinSymbols =
     {"even?", std::make_shared<BuiltinProcValue>(&evenProc)},
     {"odd?", std::make_shared<BuiltinProcValue>(&oddProc)},
     {"zero?", std::make_shared<BuiltinProcValue>(&zeroProc)},
+    {"eq?", std::make_shared<BuiltinProcValue>(&eqProc)},
+    {"equal?", std::make_shared<BuiltinProcValue>(&equalProc)},
+    {"not", std::make_shared<BuiltinProcValue>(&notProc)},
 };

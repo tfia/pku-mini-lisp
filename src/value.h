@@ -84,6 +84,9 @@ public:
     virtual ValuePtr toValuePtr() override;
     ValuePtr getL();
     ValuePtr getR();
+    ValuePtr * getRp();
+    void setL(ValuePtr p);
+    void setR(ValuePtr p);
 };
 
 // BuiltinProcValue's declaration was moved into eval_env.h

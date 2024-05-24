@@ -147,6 +147,14 @@ ValuePtr PairValue::getL() {return dataL;}
 
 ValuePtr PairValue::getR() {return dataR;}
 
+ValuePtr * PairValue::getRp() {return &dataR;}
+
+// ---------- set shared_ptr of dataL & dataR ----------
+
+void PairValue::setL(ValuePtr p) {dataL = p;}
+
+void PairValue::setR(ValuePtr p) {dataR = p;}
+
 // ---------- get function pointer of BuiltinProcValue ----------
 
 BuiltinFuncType* BuiltinProcValue::getFunc() {return func;}

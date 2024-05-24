@@ -87,6 +87,94 @@ ValuePtr lambdaForm(const std::vector<ValuePtr> & args, EvalEnv & env)
     return std::make_shared<LambdaValue>(params, body, env.shared_from_this());
 }
 
+ValuePtr condForm(const std::vector<ValuePtr> & args, EvalEnv & env)
+{
+    ValuePtr result;
+    for(int i = 1; i <= args.size() - 2; i++)
+    {
+        auto it = args[i]->toVector();
+        if(it[0]->isSymbol() && it[0]->toString() == "else")
+        {
+            if(i != args.size() - 2)
+                throw LispError("condForm: `else` is not the last condition.");
+            for(int j = 1; j <= it.size() - 2; j++)
+            {
+                result = env.eval(it[j]);
+            }
+            return result;
+        }
+        auto tp = env.eval(it[0]);
+        if(tp->isBoolean() && std::dynamic_pointer_cast<BooleanValue>(tp)->toBool() == false)
+        {
+            continue;
+        }
+        else
+        {  
+            if(it.size() == 2) return tp;
+            for(int j = 1; j <= it.size() - 2; j++) result = env.eval(it[j]);
+        }
+            
+        return result;
+    }
+    throw LispError("condForm: All conditions are false.");
+}
+
+ValuePtr beginForm(const std::vector<ValuePtr> & args, EvalEnv & env)
+{
+    ValuePtr result;
+    for(int i = 1; i <= args.size() - 2; i++)
+    {
+        result = env.eval(args[i]);
+    }
+    return result;
+}
+
+ValuePtr letForm(const std::vector<ValuePtr> & args, EvalEnv & env)
+{
+    auto params = args[1]->toVector();
+    std::vector<std::string> lparams;
+    std::vector<ValuePtr> largs;
+    for(int i = 0; i <= params.size() - 2; i++)
+    {
+        auto tp = std::dynamic_pointer_cast<PairValue>(params[i]);
+        lparams.push_back(tp->getL()->toString());
+        largs.push_back(std::dynamic_pointer_cast<PairValue>(tp->getR())->getL());
+    }
+    std::vector<ValuePtr> lbody;
+    for(int i = 2; i <= args.size() - 2; i++)
+    {
+        lbody.push_back(args[i]);
+    }
+    lparams.push_back("()");
+    lbody.push_back(std::make_shared<NilValue>());
+    auto l = std::make_shared<LambdaValue>(lparams, lbody, env.shared_from_this());
+    return env.apply(l, largs);
+}
+
+ValuePtr quasiquoteForm(const std::vector<ValuePtr> & args, EvalEnv & env)
+{
+    auto v = args[1]->toVector();
+    std::vector<ValuePtr> result;
+    for(auto & i : v)
+    {
+        if(i->isNil()) continue;
+        std::vector<ValuePtr> forquote{std::make_shared<NilValue>(), i};
+        if(!i->isPair()) result.push_back(quoteForm(forquote, env));
+        else
+        {
+            if(std::dynamic_pointer_cast<PairValue>(i)->getL()->toString() == "unquote")
+            {
+                auto tp = std::dynamic_pointer_cast<PairValue>(i)->getR();
+                result.push_back(env.eval(std::dynamic_pointer_cast<PairValue>(tp)->getL()));
+            }
+            else result.push_back(quoteForm(forquote, env));
+        }
+    }
+    return vectorToList(result);
+}
+
+// ---------- export special forms table to global ----------
+
 std::unordered_map<std::string, SpecialFormType *> SpecialForms = 
 {
     {"define", &defineForm},
@@ -95,4 +183,8 @@ std::unordered_map<std::string, SpecialFormType *> SpecialForms =
     {"and", &andForm},
     {"or", &orForm},
     {"lambda", &lambdaForm},
+    {"cond", &condForm},
+    {"begin", &beginForm},
+    {"let", &letForm},
+    {"quasiquote", &quasiquoteForm},
 };
