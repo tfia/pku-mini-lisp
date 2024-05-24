@@ -251,7 +251,7 @@ ValuePtr filterProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     std::vector<ValuePtr> result;
     if(params.size() != 2) throw SyntaxError("filterProc: Needed 2 params.");
-    if(!params[0]->isBuiltinProc())
+    if(!params[0]->isBuiltinProc() && !params[0]->isLambda())
         throw SyntaxError("filterProc: Param #1 should be Proc.");
     std::vector<ValuePtr> vin = params[1]->toVector();
     vin.erase(vin.end() - 1); // the last element is NilValue. delete it
