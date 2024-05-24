@@ -99,7 +99,6 @@ std::string SymbolValue::toString()
 std::string PairValue::toString()
 {
     auto v = this->toVector();
-    // for(auto & i : v) std::cout << i->toString() << " " << std::endl;
     std::string res = "(";
     for(int i = 0; i <= (int)v.size() - 1; i++)
     {
