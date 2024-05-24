@@ -96,30 +96,24 @@ std::string SymbolValue::toString()
     return data;
 }
 
-namespace Tmp
-{
-    bool isBegin = 1;
-}
-
 std::string PairValue::toString()
 {
-    std::string res = "";
-    if(Tmp::isBegin == 1)
+    auto v = this->toVector();
+    // for(auto & i : v) std::cout << i->toString() << " " << std::endl;
+    std::string res = "(";
+    for(int i = 0; i <= (int)v.size() - 1; i++)
     {
-        res += "(";
-        Tmp::isBegin = 0;
-    } 
-    res += (dataL->toString());
-    if(typeid(*dataR) == typeid(NilValue))
-    {
-        res += ")";
-        Tmp::isBegin = 1;
-        return res;
+        if(i == (int)v.size() - 1 && v[i]->isNil()) continue;
+        res += v[i]->toString();
+        if(i != (int)v.size() - 1)
+        {
+            if(i != (int)v.size() - 2) res += " ";
+            else if(i == (int)v.size() - 2 && (!v[i + 1]->isPair() && !v[i + 1]->isNil()))
+                res += " ";
+        }
+        if(i == (int)v.size() - 2 && (!v[i + 1]->isPair() && !v[i + 1]->isNil())) res += ". ";
     }
-    if(typeid(*dataR) == typeid(PairValue))
-        res += (" " + dataR->toString());
-    else res += (" . " + dataR->toString() + ")");
-    Tmp::isBegin = 1;
+    res += ")";
     return res;
 }
 
