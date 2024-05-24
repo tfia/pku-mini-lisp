@@ -21,6 +21,28 @@ BuiltinFuncType exitProc;
 
 BuiltinFuncType newlineProc;
 
+BuiltinFuncType evalProc;
+
+// ---------- Type Identify Library ----------
+
+BuiltinFuncType atomProc;
+
+BuiltinFuncType booleanProc;
+
+BuiltinFuncType integerProc;
+
+BuiltinFuncType listProc;
+
+BuiltinFuncType nullProc;
+
+BuiltinFuncType pairProc;
+
+BuiltinFuncType procedureProc;
+
+BuiltinFuncType stringProc;
+
+BuiltinFuncType symbolProc;
+
 // ---------- Arithmetic Library ----------
 
 BuiltinFuncType addProc;

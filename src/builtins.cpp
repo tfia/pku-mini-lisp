@@ -9,6 +9,7 @@ using BuiltinFuncType = ValuePtr(const std::vector<ValuePtr> &, EvalEnv &);
 
 ValuePtr applyProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
+    if(params.size() != 2) throw SyntaxError("applyProc: Needed 2 params.");
     if(!params[0]->isBuiltinProc())
         throw SyntaxError("applyProc: Param #1 should be Proc.");
     std::vector<ValuePtr> vin = params[1]->toVector();
@@ -57,6 +58,93 @@ ValuePtr newlineProc(const std::vector<ValuePtr> & params, EvalEnv & env)
 {
     std::cout << std::endl;
     return std::make_shared<NilValue>();
+}
+
+ValuePtr evalProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("evalProc: Needed only 1 param.");
+    return env.eval(params[0]);
+}
+
+// ---------- Type Identify Library ----------
+
+ValuePtr atomProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("atomProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    bool result = (tp->isBoolean() || tp->isNumeric() || tp->isString()
+        || tp->isSymbol() || tp->isNil());
+    return std::make_shared<BooleanValue>(result);
+}
+
+ValuePtr booleanProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("booleanProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    bool result = tp->isBoolean();
+    return std::make_shared<BooleanValue>(result);
+}
+
+ValuePtr integerProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("integerProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(!tp->isNumeric()) return std::make_shared<BooleanValue>(false);
+    double t = std::dynamic_pointer_cast<NumericValue>(tp)->toDouble();
+    bool result = ((int)t == t);
+    return std::make_shared<BooleanValue>(result);
+}
+
+ValuePtr listProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("listProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isNil()) return std::make_shared<BooleanValue>(true);
+    else if(!tp->isPair()) return std::make_shared<BooleanValue>(false);
+    auto R = std::dynamic_pointer_cast<PairValue>(tp)->getR();
+    if(R->isNil()) return std::make_shared<BooleanValue>(true);
+    else if(!R->isPair()) return std::make_shared<BooleanValue>(false);
+    return std::make_shared<BooleanValue>(true);
+}
+
+ValuePtr nullProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("nullProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isNil()) return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
+}
+
+ValuePtr pairProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("pairProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isPair()) return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
+}
+
+ValuePtr procedureProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("procedureProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isBuiltinProc() || tp->isLambda()) return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
+}
+
+ValuePtr stringProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("stringProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isString()) return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
+}
+
+ValuePtr symbolProc(const std::vector<ValuePtr> & params, EvalEnv & env)
+{
+    if(params.size() != 1) throw SyntaxError("symbolProc: Needed only 1 param.");
+    ValuePtr tp = params[0];
+    if(tp->isSymbol()) return std::make_shared<BooleanValue>(true);
+    return std::make_shared<BooleanValue>(false);
 }
 
 // ---------- Arithmetic Library ----------
@@ -231,6 +319,17 @@ const std::unordered_map<std::string, ValuePtr> BuiltinSymbols =
     {"displayln", std::make_shared<BuiltinProcValue>(&displaylnProc)},
     {"exit", std::make_shared<BuiltinProcValue>(&exitProc)},
     {"newline", std::make_shared<BuiltinProcValue>(&newlineProc)},
+    {"eval", std::make_shared<BuiltinProcValue>(&evalProc)},
+    // ---------- Type Identify Library ----------
+    {"atom?", std::make_shared<BuiltinProcValue>(&atomProc)},
+    {"boolean?", std::make_shared<BuiltinProcValue>(&booleanProc)},
+    {"integer?", std::make_shared<BuiltinProcValue>(&integerProc)},
+    {"list?", std::make_shared<BuiltinProcValue>(&listProc)},
+    {"null?", std::make_shared<BuiltinProcValue>(&nullProc)},
+    {"pair?", std::make_shared<BuiltinProcValue>(&pairProc)},
+    {"procedure?", std::make_shared<BuiltinProcValue>(&procedureProc)},
+    {"string?", std::make_shared<BuiltinProcValue>(&stringProc)},
+    {"symbol?", std::make_shared<BuiltinProcValue>(&symbolProc)},
     // ---------- Arithmetic Library ----------
     {"+", std::make_shared<BuiltinProcValue>(&addProc)},
     {"-", std::make_shared<BuiltinProcValue>(&subProc)},
