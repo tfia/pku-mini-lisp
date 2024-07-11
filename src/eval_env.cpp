@@ -71,7 +71,7 @@ ValuePtr EvalEnv::eval(ValuePtr expr)
     {
         std::vector<ValuePtr> v = expr->toVector();
         auto tp = std::dynamic_pointer_cast<PairValue>(expr);
-        // std::cout << v[0]->toString() << std::endl;
+        std::cout << v[0]->toString() << std::endl;
         
         if(auto name = tp->getL()->asSymbol())
         {
@@ -82,6 +82,7 @@ ValuePtr EvalEnv::eval(ValuePtr expr)
             else
             {
                 ValuePtr proc = this->eval(v[0]);
+                std::cout << "called: " << proc->toString() << std::endl;
                 std::vector<ValuePtr> args = evalList(std::dynamic_pointer_cast<PairValue>(expr)->getR());
                 return this->apply(proc, args);
             }
